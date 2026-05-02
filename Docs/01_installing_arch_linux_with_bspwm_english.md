@@ -1,6 +1,8 @@
 This file contains the command sequence that is needed to fully install an Arch Linux system.
 It also includes the use of the builder from the repository, which automatically deploys the BSPWM environment.
 
+**Repository for this fork:** [SergeyTitanov/bspwm-myconf](https://github.com/SergeyTitanov/bspwm-myconf) (forked from [Zproger/bspwm-dotfiles](https://github.com/Zproger/bspwm-dotfiles)). For **ASUS Zephyrus G14**, dual-boot with Windows, GRUB, LUKS, and Btrfs, use the Russian guide [00_installing_arch_linux_with_bspwm_russian.md](00_installing_arch_linux_with_bspwm_russian.md), which is maintained for that layout.
+
 This is where the most up to date commands are stored. For ease of understanding, I recommend watching this [video](https://youtu.be/9zewiGf7j-A), comparing it to the instructions (but prioritize the commands with this file first).
 
 ### Connect to WiFi (optional)
@@ -184,8 +186,8 @@ At the builder stage you will be prompted to install `DEV_PACKAGES`, these are n
 
 and build the shell using these commands:
 ```bash
-git clone https://github.com/Zproger/bspwm-dotfiles.git
-cd bspwm-dotfiles
+git clone https://github.com/SergeyTitanov/bspwm-myconf.git
+cd bspwm-myconf
 python3 Builder/install.py
 ```
 

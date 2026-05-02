@@ -1,4 +1,6 @@
-# Установка Arch Linux + BSPWM (Zproger) на ASUS ROG Zephyrus G14
+# Установка Arch Linux + BSPWM (**bspwm-myconf**) на ASUS ROG Zephyrus G14
+
+Конфигурация и билдер берутся из репозитория **[SergeyTitanov/bspwm-myconf](https://github.com/SergeyTitanov/bspwm-myconf)** (форк [Zproger/bspwm-dotfiles](https://github.com/Zproger/bspwm-dotfiles) с доработками под G14 и обновлённым гайдом).
 
 Данный файл — актуальная последовательность шагов для **ноутбука ASUS ROG Zephyrus G14** (ориентир: модели с **AMD Ryzen** и **NVIDIA GeForce RTX**), **dual-boot с уже установленной Windows**, **отдельный EFI-раздел для Arch**, **LUKS без LVM**, **Btrfs с подтомами**, загрузчик **GRUB + os-prober** (в одном меню: Arch, fallback, Windows Boot Manager).
 
@@ -486,7 +488,7 @@ nvcc --version
 
 ---
 
-## 18. Установка BSPWM и dotfiles Zproger
+## 18. Установка BSPWM и dotfiles из bspwm-myconf
 
 База для X11 и билдера (часть пакетов билдер доустановит сам — см. `Builder/packages.py`):
 
@@ -511,12 +513,12 @@ sudo pacman -S --needed \
   unzip unrar zip
 ```
 
-Клон репозитория (свой URL форка, если используете форк):
+Клон репозитория:
 
 ```bash
 cd ~
-git clone https://github.com/Zproger/bspwm-dotfiles.git
-cd bspwm-dotfiles
+git clone https://github.com/SergeyTitanov/bspwm-myconf.git
+cd bspwm-myconf
 ```
 
 Перед `install.py` откройте `Builder/packages.py`: не трогайте `BASE_PACKAGES` без необходимости. Для Ryzen G14 в `BASE_PACKAGES` уже указаны **`amd-ucode`** и драйверы **AMD** (amdgpu / vulkan-radeon). **`DEV_PACKAGES`** содержит только Obsidian, Python и пакеты **ASUS Linux** (`asusctl`, `power-profiles-daemon`, `rog-control-center`) — их ставит `pacman` из репозитория **`[g14]`**, поэтому блок `[g14]` в `/etc/pacman.conf` и ключ `pacman-key` нужно настроить **до** запуска пункта с dev-зависимостями. После установки dev-пакетов выполните: `sudo systemctl enable --now power-profiles-daemon.service`.
@@ -716,6 +718,6 @@ sudo grub-mkconfig -o /boot/grub/grub.cfg
 9. `grub-install` на Arch EFI → смонтировать Windows EFI → `os-prober` → `grub-mkconfig`.
 10. Первый вход → репозиторий ASUS → `asusctl`, `linux-g14` → перезагрузка.
 11. NVIDIA DKMS + сервисы → при необходимости CUDA/cudnn.
-12. Xorg + BSPWM + `Builder/install.py`, HiDPI и sxhkd.
+12. Клон [bspwm-myconf](https://github.com/SergeyTitanov/bspwm-myconf), Xorg + BSPWM + `Builder/install.py`, HiDPI и sxhkd.
 
 Удачной установки.
