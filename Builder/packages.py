@@ -6,8 +6,8 @@ BASE_PACKAGES = [
     "bat",  # Улучшенная версия cat
     "evince",  # Читалка PDF
     "xdotool",  # Dependency for ~/bin/cursor_tracker.sh
-    "mesa", "lib32-mesa", "xf86-video-nouveau", "xf86-video-intel", "vulkan-intel"  # Necessary drivers
-    "nvtop", # Позволяет посмотреть нагрузку на GPU в режиме терминала
+    "mesa", "lib32-mesa", "xf86-video-amdgpu", "vulkan-radeon", "lib32-vulkan-radeon",  # Ryzen iGPU (AMD)
+    "nvtop",  # Позволяет посмотреть нагрузку на GPU в режиме терминала
     "npm",  # Зависимость для других компонентов
     "brightnessctl",  # Используется для управления яркостью (bin/brightness)
     "kitty",  # Зависимость nvim для images.lua
@@ -68,7 +68,7 @@ BASE_PACKAGES = [
     # "alsa-tools",  # TODO: Deprecated
     "network-manager-applet", "networkmanager-openvpn",
     "gparted",  # Работа с носителями в системе
-    "intel-ucode",  # Микрокод для процессоров intel
+    "amd-ucode",  # Микрокод для процессоров AMD (Ryzen / G14)
     "gnu-netcat",  # Утилиты для работы с сетью
     "usbutils",  # Утилиты для работы с USB-устройствами
     # "python-pyalsa",  # TODO: Deprecated
@@ -83,40 +83,13 @@ BASE_PACKAGES = [
 ]
 
 DEV_PACKAGES = [
-    "screenkey",  # Вывод нажатий клавиатуры на экран
-    "timeshift",  # Софт для бэкапов
-    "pinta",  # Софт для рисования
-    "kdenlive",  # Монтаж видео
-    "lazygit",  # Удобный интерфейс для управления git
-    "wireshark-qt",  # Перехват и анализ сетевых пакетов
-    "filezilla",  # Работа с FTP из графической среды
-    "chromium",  # Дополнительный браузер
-    "xfce4-settings",  # Зависимость для thunar и thunar actions
-    "keepassxc",  # Защищенный менеджер паролей
-    "audacity",  # Работа со звуком
-    "gufw",  # TODO: Deprecated
-    # "python-pywal",  # TODO: Deprecated
-    "bleachbit",  # Софт для шрединга файлов и безопасной очистки системы
-    "veracrypt",  # Создание криптоконтейнеров
-    "homebank",  # Отслеживание финансов
-    # "touche",  # TODO: Deprecated
-    # "dconf-editor",  TODO: Deprecated
-    "neovim",  # Консольный редактор кода
-    "obs-studio",  # Запись видео и управление трансляциями
-    "telegram-desktop",  # Мессенджер
-    "tmux",  # TODO: Deprecated
-    "yt-dlp",  # Утилита для работы с youtube
-    "code",  # Редактор кода
-    "cowsay",  # Вывод текста с ASCII артами
-    "deluge-gtk",  # Торрент клиент
-    "flameshot",  # Программа для скриншотов
-    "sqlitebrowser",  # Работа с SQLite базами
-    "obsidian",  # Работа с заметками
-    "python-pip",  # Система управления пакетами Python
-    "bpython",  # Выполнение Python кода построчно
-    "ipython",  # Интерактивный режим Python
-    "cloc",  # Посчитать количество строк кода
-    "hexyl",  # Hex дампер
+    "obsidian",  # Заметки
+    "python",  # Интерпретатор Python
+    "python-pip",  # Установка пакетов PyPI
+    # Стек ASUS Linux (официально с репозитория [g14]; добавьте его в /etc/pacman.conf до билдера):
+    "asusctl",  # CLI и демон для ROG (asus-linux.org)
+    "power-profiles-daemon",  # Профили энергопотребления (после установки: systemctl enable --now power-profiles-daemon)
+    "rog-control-center",  # GUI для asusctl / ROG
 ]
 
 AUR_PACKAGES = [
