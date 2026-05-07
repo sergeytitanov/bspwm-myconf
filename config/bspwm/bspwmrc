@@ -2,7 +2,9 @@
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
-# Multiple monitor support
+# Второй монитор: ориентация и сторона (см. Docs/MASTER_INSTALL_russian.md в bspwm-myconf)
+# export BSPWM_EXTERNAL_ROTATE=right   # normal | right | left | inverted
+export BSPWM_EXTERNAL_POSITION=left    # left | right
 sh $HOME/.config/bspwm/dual_monitors.sh
 
 # Window borders (Auto-Generate)
@@ -35,10 +37,22 @@ bspc rule -a feh state=floating
 xrdb merge ~/.Xresources
 
 # Random Wallpaper Script
-sh $HOME/bin/random_wallpaper
+sh $HOME/bin/default_wallpaper
 
 # Run polybar
-~/.config/polybar/launch.sh
+~/.config/polybar/launch.sh &
+
+# Run touchpad conf
+libinput-gestures-setup start
+
+# Run multiple windows
+bspc monitor -d 1 2 3 4 5
+
+# Окна должны занимать доступную область без "щелей" по краям
+bspc config top_padding 0
+bspc config bottom_padding 0
+bspc config left_padding 0
+bspc config right_padding 0
 
 # launch notification daemon
 dunst -config $HOME/.config/bspwm/dunstrc &
@@ -51,6 +65,8 @@ pgrep -x redshift > /dev/null || redshift &
 picom --config $HOME/.config/bspwm/picom_configurations/1.conf &
 
 # == autostart ==
+"$HOME/bin/xdg-portal-sync-env.sh"
+
 pkill flameshot; flameshot &
 
 # run cursor tracker

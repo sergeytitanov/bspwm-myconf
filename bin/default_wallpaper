@@ -1,0 +1,5 @@
+#!/bin/sh
+_lib="$(cd "$(dirname "$0")" && pwd)/wallpaper_multimon_lib.sh"
+# shellcheck source=/dev/null
+. "$_lib"
+wallpaper_apply_file "${HOME}/Images/001.jpg"

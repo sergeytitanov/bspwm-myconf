@@ -55,6 +55,36 @@ XF86MonBrightness{Up,Down}
 Print
     flameshot gui
 
+# External display: side and rotation
+super + alt + {h,l}
+    sh $HOME/bin/bspwm-displayctl.sh {side-left,side-right}
+
+super + alt + {k,j}
+    sh $HOME/bin/bspwm-displayctl.sh {rotate-left,rotate-right}
+
+super + alt + BackSpace
+    sh $HOME/bin/bspwm-displayctl.sh rotate-normal
+
+# External display: scale
+super + alt + minus
+    sh $HOME/bin/bspwm-displayctl.sh ui-scale-down
+
+super + alt + equal
+    sh $HOME/bin/bspwm-displayctl.sh ui-scale-up
+
+super + alt + 0
+    sh $HOME/bin/bspwm-displayctl.sh ui-scale-reset
+
+# External display: global scale (xrandr --scale)
+super + alt + shift + minus
+    sh $HOME/bin/bspwm-displayctl.sh global-scale-down
+
+super + alt + shift + equal
+    sh $HOME/bin/bspwm-displayctl.sh global-scale-up
+
+super + alt + shift + 0
+    sh $HOME/bin/bspwm-displayctl.sh global-scale-reset
+
 #
 #
 # BSPWM HOTKEYS

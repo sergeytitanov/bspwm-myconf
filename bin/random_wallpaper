@@ -1,3 +1,5 @@
 #!/bin/bash
-
-feh --randomize --no-fehbg --bg-fill ~/Images/
+_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/wallpaper_multimon_lib.sh"
+# shellcheck source=/dev/null
+. "$_lib"
+wallpaper_random_from_dir "${HOME}/Images"

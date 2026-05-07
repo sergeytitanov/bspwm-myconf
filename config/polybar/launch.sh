@@ -1,17 +1,29 @@
-#!/usr/bin/env bash
-
-# Terminate already running bar instances
+#!/bin/sh
+# Имена выходов пишет dual_monitors.sh в ~/.cache/bspwm_polybar_monitors.env
 killall -q polybar
+while pgrep -x polybar >/dev/null; do
+    sleep 0.2
+done
 
-# Launch bar1 and bar2
-echo "---" | tee -a /tmp/polybar1.log /tmp/polybar2.log
+ENVFILE="${HOME}/.cache/bspwm_polybar_monitors.env"
+if [ -f "$ENVFILE" ]; then
+    # shellcheck source=/dev/null
+    . "$ENVFILE"
+fi
 
-# Run on the desired monitor
-if [[ $(xrandr -q | grep 'HDMI-1-1 connected' ) ]]; then
-	polybar top_external -r >>/tmp/polybar1.log 2>&1 & disown
-	polybar top -r >>/tmp/polybar1.log 2>&1 & disown
-	echo "Polybar launched for two monitors"
+DISPLAY_CFG="${HOME}/.config/bspwm/display.env"
+if [ -f "$DISPLAY_CFG" ]; then
+    # shellcheck source=/dev/null
+    . "$DISPLAY_CFG"
+fi
+
+export MONITOR="${MONITOR:-eDP}"
+export MONITOR_EXT="${MONITOR_EXT:-}"
+export POLYBAR_DPI="${POLYBAR_DPI:-$(awk "BEGIN{printf \"%d\", 144*${BSPWM_UI_SCALE_CFG:-1.00}}")}"
+
+if [ -n "$MONITOR_EXT" ] && xrandr -q | grep -q "^${MONITOR_EXT} connected"; then
+    MONITOR_EXT="$MONITOR_EXT" polybar top_external -r >>/tmp/polybar_external.log 2>&1 &
+    MONITOR="$MONITOR" polybar top -r >>/tmp/polybar.log 2>&1 &
 else
-	polybar top -r >>/tmp/polybar1.log 2>&1 & disown
-	echo "Polybar launched for one monitor..."
+    MONITOR="$MONITOR" polybar top -r >>/tmp/polybar.log 2>&1 &
 fi

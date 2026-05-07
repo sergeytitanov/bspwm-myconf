@@ -1,59 +1,99 @@
 #!/bin/sh
+# Внутренний: eDP*. Внешний: DP-*/HDMI*/DisplayPort-* (в т.ч. USB‑C).
+#
+# Поворот внешнего (как в xrandr, не «градусы экрана» буквально):
+#   normal    — 0°
+#   right     — по часовой 90° (частый «портрет»)
+#   left      — против часовой 90° (= 270° по часовой)
+#   inverted  — 180°
+# Задать: export BSPWM_EXTERNAL_ROTATE=right   (в ~/.profile, bspwmrc или перед startx)
+#
+# Сторона внешнего относительно ноутбука:
+#   BSPWM_EXTERNAL_POSITION=left  (по умолчанию) или right
 
-INTERNAL_MONITOR="eDP-1"
-EXTERNAL_MONITOR="HDMI-1-1"
+POLYBAR_MON_ENV="${HOME}/.cache/bspwm_polybar_monitors.env"
+DISPLAY_CFG="${HOME}/.config/bspwm/display.env"
 
-monitor_add() {
-  # Move first 5 desktops to external monitor
-  for desktop in $(bspc query -D --names -m "$INTERNAL_MONITOR" | sed 5q); do
-    bspc desktop "$desktop" --to-monitor "$EXTERNAL_MONITOR"
-  done
+# Приоритет: переменные окружения > сохраненный конфиг > дефолты
+[ -f "$DISPLAY_CFG" ] && . "$DISPLAY_CFG"
+EXT_ROT="${BSPWM_EXTERNAL_ROTATE:-${BSPWM_EXTERNAL_ROTATE_CFG:-normal}}"
+EXT_SIDE="${BSPWM_EXTERNAL_POSITION:-${BSPWM_EXTERNAL_POSITION_CFG:-left}}"
+EXT_GLOBAL_SCALE="${BSPWM_EXTERNAL_GLOBAL_SCALE:-${BSPWM_EXTERNAL_GLOBAL_SCALE_CFG:-1.00}}"
+EXT_WINDOW_GAP="${BSPWM_EXTERNAL_WINDOW_GAP:-0}"
+EXT_BORDER_WIDTH="${BSPWM_EXTERNAL_BORDER_WIDTH:-0}"
 
-  # Remove default desktop created by bspwm
-  bspc desktop Desktop --remove
-
-  # reorder monitors
-  bspc wm -O "$EXTERNAL_MONITOR" "$INTERNAL_MONITOR"
+pick_internal() {
+    for n in eDP eDP-1 eDP-2; do
+        if xrandr -q | grep -q "^${n} connected"; then
+            echo "$n"
+            return
+        fi
+    done
+    echo "eDP"
 }
 
-monitor_remove() {
-  # Add default temp desktop because a minimum of one desktop is required per monitor
-  bspc monitor "$EXTERNAL_MONITOR" -a Desktop
-
-  # Move all desktops except the last default desktop to internal monitor
-  for desktop in $(bspc query -D -m "$EXTERNAL_MONITOR");	do
-    bspc desktop "$desktop" --to-monitor "$INTERNAL_MONITOR"
-  done
-
-  # delete default desktops
-  bspc desktop Desktop --remove
-
-  # reorder desktops
-  bspc monitor "$INTERNAL_MONITOR" -o 1 2 3 4 5 6 7 8 9
+pick_external() {
+    for n in \
+        DP-1 DP-2 DP-1-0 DP-1-1 DP-1-2 DP-1-3 DP-1-4 \
+        DisplayPort-0 DisplayPort-1 DisplayPort-2 DisplayPort-1-0 DisplayPort-2-0 \
+        HDMI-1-1 HDMI-A-1-0 HDMI-1 HDMI-1-0 HDMI-2; do
+        if xrandr -q | grep -q "^${n} connected"; then
+            echo "$n"
+            return
+        fi
+    done
+    echo ""
 }
 
-# On first load setup default workspaces
-if [[ $(xrandr -q | grep "${EXTERNAL_MONITOR} connected") ]]; then
-  bspc monitor "$EXTERNAL_MONITOR" -d 1 2 3 4 5
-  bspc monitor "$INTERNAL_MONITOR" -d 6 7 8 9
-  bspc wm -O "$EXTERNAL_MONITOR" "$INTERNAL_MONITOR"
+INTERNAL_MONITOR="$(pick_internal)"
+EXTERNAL_MONITOR="$(pick_external)"
+
+mkdir -p "${HOME}/.cache"
+# По умолчанию только внутренний (polybar читает при старте)
+{
+    echo "export MONITOR=${INTERNAL_MONITOR}"
+    echo "export MONITOR_EXT="
+} >"$POLYBAR_MON_ENV"
+
+export MONITOR="${INTERNAL_MONITOR}"
+export MONITOR_EXT="${EXTERNAL_MONITOR:-}"
+
+if [ -n "$EXTERNAL_MONITOR" ] && xrandr -q | grep -q "${EXTERNAL_MONITOR} connected"; then
+    bspc monitor "$INTERNAL_MONITOR" -d 1 2 3 4 5
+    bspc monitor "$EXTERNAL_MONITOR" -d 6 7 8 9
+    bspc wm -O "$INTERNAL_MONITOR" "$EXTERNAL_MONITOR"
 else
-  bspc monitor "$INTERNAL_MONITOR" -d 1 2 3 4 5 6 7 8 9 
+    bspc monitor "$INTERNAL_MONITOR" -d 1 2 3 4 5
 fi
 
-if [[ $(xrandr -q | grep "${EXTERNAL_MONITOR} connected") ]]; then
-  # set xrandr rules for docked setup
-  xrandr --output "$INTERNAL_MONITOR" --mode 1920x1080 --pos 0x0 --rotate normal
-  xrandr --output "$EXTERNAL_MONITOR" --primary --mode 2560x1440 --pos 1920x0 --rotate normal --left-of "$INTERNAL_MONITOR"
-  
-  if [[ $(bspc query -D -m "${EXTERNAL_MONITOR}" | wc -l) -ne 5 ]]; then
-    monitor_add
-  fi
-  bspc wm -O "$EXTERNAL_MONITOR" "$INTERNAL_MONITOR"
+if [ -n "$EXTERNAL_MONITOR" ] && xrandr -q | grep -q "${EXTERNAL_MONITOR} connected"; then
+    # Сначала внутренний (опорная точка), затем внешний — геометрия без конфликта --pos и --left-of
+    xrandr --output "$INTERNAL_MONITOR" --auto --rotate normal 2>/dev/null
+    if [ "$EXT_SIDE" = "right" ]; then
+        xrandr --output "$EXTERNAL_MONITOR" --auto --rotate "$EXT_ROT" --scale "${EXT_GLOBAL_SCALE}x${EXT_GLOBAL_SCALE}" --right-of "$INTERNAL_MONITOR" 2>/dev/null
+    else
+        xrandr --output "$EXTERNAL_MONITOR" --auto --rotate "$EXT_ROT" --scale "${EXT_GLOBAL_SCALE}x${EXT_GLOBAL_SCALE}" --left-of "$INTERNAL_MONITOR" 2>/dev/null
+    fi
+    xrandr --output "$INTERNAL_MONITOR" --primary 2>/dev/null
+
+    {
+        echo "export MONITOR=${INTERNAL_MONITOR}"
+        echo "export MONITOR_EXT=${EXTERNAL_MONITOR}"
+    } >"$POLYBAR_MON_ENV"
+    bspc wm -O "$INTERNAL_MONITOR" "$EXTERNAL_MONITOR"
+
+    # На внешнем мониторе без щелей вокруг окон.
+    bspc config -m "$EXTERNAL_MONITOR" window_gap "$EXT_WINDOW_GAP"
+    bspc config -m "$EXTERNAL_MONITOR" border_width "$EXT_BORDER_WIDTH"
 else
-  # set xrandr rules for mobile setup
-  xrandr --output "$INTERNAL_MONITOR" --primary --mode 1920x1080 --pos 0x0 --rotate normal --output "$EXTERNAL_MONITOR" --off
-  if [[ $(bspc query -D -m "${INTERNAL_MONITOR}" | wc -l) -ne 10 ]]; then
-    monitor_remove
-  fi
+    for out in \
+        DP-1 DP-2 DP-1-0 DP-1-1 DP-1-2 DP-1-3 DP-1-4 \
+        DisplayPort-0 DisplayPort-1 DisplayPort-2 DisplayPort-1-0 DisplayPort-2-0 \
+        HDMI-1-1 HDMI-A-1-0 HDMI-1 HDMI-1-0 HDMI-2; do
+        xrandr --output "$out" --off 2>/dev/null
+    done
+    xrandr --output "$INTERNAL_MONITOR" --primary --auto --rotate normal 2>/dev/null
+    if [ "$(bspc query -D -m "${INTERNAL_MONITOR}" | wc -l)" -ne 5 ]; then
+        bspc monitor "$INTERNAL_MONITOR" -d 1 2 3 4 5
+    fi
 fi
